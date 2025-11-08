@@ -1,0 +1,357 @@
+openapi: 3.0.0
+info:
+  title: Prompt Firewall API
+  version: 1.0.0
+  description: API for evaluating prompts through a security firewall
+  contact:
+    name: API Support
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://your-deployment-url.com
+    description: Production server
+
+paths:
+  /api/v1/query:
+    post:
+      summary: Evaluate a prompt through the firewall
+      description: Analyzes a prompt for PII and injection attempts, returns decision and risks
+      tags:
+        - Public
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+              properties:
+                prompt:
+                  type: string
+                  description: The user's prompt to evaluate
+                  example: "My email is user@example.com"
+      responses:
+        '200':
+          description: Successful evaluation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      decision:
+                        type: string
+                        enum: [allow, block, modify, sanitize]
+                      promptModified:
+                        type: string
+                      response:
+                        type: string
+                        nullable: true
+                      blocked:
+                        type: boolean
+                      risks:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                            severity:
+                              type: string
+                              enum: [low, medium, high, critical]
+                            message:
+                              type: string
+                      explain:
+                        type: array
+                        items:
+                          type: object
+        '400':
+          description: Invalid request
+        '500':
+          description: Internal server error
+
+  /api/v1/policy:
+    get:
+      summary: List all policies
+      description: Get all firewall policies (requires authentication)
+      tags:
+        - Admin
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: List of policies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Policy'
+        '401':
+          description: Unauthorized
+
+    post:
+      summary: Create a new policy
+      description: Create a new firewall policy (requires authentication)
+      tags:
+        - Admin
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyInput'
+      responses:
+        '200':
+          description: Policy created
+        '401':
+          description: Unauthorized
+
+    put:
+      summary: Update a policy
+      description: Update an existing policy (requires authentication)
+      tags:
+        - Admin
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyUpdate'
+      responses:
+        '200':
+          description: Policy updated
+        '401':
+          description: Unauthorized
+
+    delete:
+      summary: Delete a policy
+      description: Delete a policy by ID (requires authentication)
+      tags:
+        - Admin
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Policy deleted
+        '401':
+          description: Unauthorized
+
+  /api/v1/logs:
+    get:
+      summary: Get firewall logs
+      description: Retrieve logs with optional filtering and export (requires authentication)
+      tags:
+        - Admin
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: hasPII
+          in: query
+          schema:
+            type: boolean
+        - name: hasInjection
+          in: query
+          schema:
+            type: boolean
+        - name: blocked
+          in: query
+          schema:
+            type: boolean
+        - name: riskType
+          in: query
+          schema:
+            type: string
+        - name: decision
+          in: query
+          schema:
+            type: string
+            enum: [allow, block, modify, sanitize]
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [csv, json]
+            description: Export format (returns file download)
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Logs retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Log'
+                  pagination:
+                    type: object
+        '401':
+          description: Unauthorized
+
+  /api/auth/login:
+    post:
+      summary: Admin login
+      description: Authenticate and create admin session
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+        '401':
+          description: Invalid password
+
+    delete:
+      summary: Logout
+      description: End admin session
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Logout successful
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: admin_session
+
+  schemas:
+    Policy:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        enabled:
+          type: boolean
+        rules:
+          type: array
+          items:
+            type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PolicyInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        enabled:
+          type: boolean
+        rules:
+          type: array
+          items:
+            type: object
+
+    PolicyUpdate:
+      allOf:
+        - $ref: '#/components/schemas/PolicyInput'
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: string
+
+    Log:
+      type: object
+      properties:
+        id:
+          type: string
+        prompt:
+          type: string
+        response:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+        hasPII:
+          type: boolean
+        hasInjection:
+          type: boolean
+        piiTypes:
+          type: array
+          items:
+            type: string
+        riskScore:
+          type: number
+        blocked:
+          type: boolean
+        decision:
+          type: string
+        risks:
+          type: array
+        metadata:
+          type: object
+

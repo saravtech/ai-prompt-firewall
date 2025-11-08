@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Log {
+  id          String   @id @default(cuid())
+  prompt      String
+  response    String?
+  timestamp   DateTime @default(now())
+  hasPII      Boolean  @default(false)
+  hasInjection Boolean @default(false)
+  piiTypes    String?  // JSON array of detected PII types
+  riskScore   Float    @default(0)
+  blocked     Boolean  @default(false)
+  metadata    String?  // JSON for additional metadata
+}
+
+model Policy {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  enabled     Boolean  @default(true)
+  rules       String   // JSON array of detection rules
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
