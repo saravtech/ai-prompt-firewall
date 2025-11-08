@@ -60,3 +60,6 @@ logs
 
 # Prisma
 lib/prisma/query_engine-*
+
+.vercel
+.env*.local
