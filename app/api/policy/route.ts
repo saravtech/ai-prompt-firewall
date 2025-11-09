@@ -82,6 +82,11 @@ export async function POST(request: NextRequest) {
 
     let policy;
     try {
+      // Ensure prisma is initialized
+      if (!prisma || !prisma.policy) {
+        throw new Error('Prisma client not initialized');
+      }
+
       policy = await prisma.policy.create({
         data: {
           name,
@@ -92,22 +97,33 @@ export async function POST(request: NextRequest) {
       });
     } catch (dbError: any) {
       // Check if it's a table doesn't exist error
-      if (dbError.code === 'P2001' || dbError.code === 'P2021' || dbError.message?.includes('does not exist') || dbError.message?.includes('no such table')) {
+      if (dbError.code === 'P2001' || dbError.code === 'P2021' || 
+          dbError.message?.includes('does not exist') || 
+          dbError.message?.includes('no such table') ||
+          dbError.message?.includes('Table') && dbError.message?.includes('does not exist')) {
         console.error('Database table does not exist. Error:', dbError);
-        console.error('Please run: npm run db:push');
         return NextResponse.json(
           { 
             success: false, 
-            error: 'Database not initialized. Please run: npm run db:push',
+            error: 'Database not initialized. Tables do not exist.',
             details: dbError.message || String(dbError),
-            code: dbError.code
+            code: dbError.code || 'TABLE_NOT_FOUND',
+            hint: 'Please run: npx prisma db push or set up database migrations'
           },
           { status: 500 }
         );
       }
       // Log other database errors for debugging
       console.error('Database error creating policy:', dbError);
-      throw dbError;
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Database error',
+          details: dbError.message || String(dbError),
+          code: dbError.code || 'DATABASE_ERROR'
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
