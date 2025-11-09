@@ -4,8 +4,22 @@ import { cookies } from 'next/headers';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123'; // Default for dev, should be set in production
 
 export async function verifyAdminAuth(request: NextRequest): Promise<boolean> {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get('admin_session')?.value;
+  // In middleware, use request.cookies directly (cookies() from next/headers doesn't work in middleware)
+  // In API routes, we can use cookies() from next/headers
+  let sessionToken: string | undefined;
+  
+  try {
+    // Try to get cookies from request (works in middleware)
+    sessionToken = request.cookies.get('admin_session')?.value;
+  } catch {
+    // If that fails, try using cookies() from next/headers (works in API routes)
+    try {
+      const cookieStore = await cookies();
+      sessionToken = cookieStore.get('admin_session')?.value;
+    } catch {
+      // If both fail, continue without session token
+    }
+  }
   
   // Check if valid session token exists (starts with "session_")
   // In production, validate against a database or use JWT
