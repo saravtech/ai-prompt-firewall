@@ -23,8 +23,10 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/api/policy/:path*',
+    '/api/logs',
     '/api/logs/:path*',
     '/api/v1/policy/:path*',
+    '/api/v1/logs',
     '/api/v1/logs/:path*',
   ],
 };
