@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Convert policies to FirewallRule format
-      firewallRules = activePolicies.flatMap((policy) => {
+      firewallRules = activePolicies.flatMap((policy: any) => {
         try {
           const rules = JSON.parse(policy.rules);
           return Array.isArray(rules) ? rules : [];
