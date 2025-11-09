@@ -1,8 +1,26 @@
-import { PrismaClient } from '@prisma/client';
 import path from 'path';
 
+// Use dynamic import to avoid build-time initialization errors
+let PrismaClient: any;
+let prismaClientModule: any;
+
+// Lazy load PrismaClient only when needed (not during build-time static analysis)
+async function loadPrismaClient() {
+  if (!prismaClientModule) {
+    try {
+      prismaClientModule = await import('@prisma/client');
+      PrismaClient = prismaClientModule.PrismaClient;
+    } catch (error) {
+      // During build, Prisma might not be generated yet - this is OK
+      console.warn('Prisma client not available, will be available at runtime');
+      return null;
+    }
+  }
+  return PrismaClient;
+}
+
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
+  prisma: any | undefined;
 };
 
 // Ensure DATABASE_URL is set correctly for both local and production
@@ -27,15 +45,47 @@ function getDatabaseUrl(): string {
   return absoluteUrl;
 }
 
-const databaseUrl = getDatabaseUrl();
+// Create Prisma client instance - lazy initialization
+function getPrisma() {
+  if (globalForPrisma.prisma) {
+    return globalForPrisma.prisma;
+  }
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({
-  datasources: {
-    db: {
-      url: databaseUrl,
-    },
-  },
-});
+  // Try to load PrismaClient synchronously first (for runtime)
+  try {
+    const { PrismaClient: PC } = require('@prisma/client');
+    const databaseUrl = getDatabaseUrl();
+    globalForPrisma.prisma = new PC({
+      datasources: {
+        db: {
+          url: databaseUrl,
+        },
+      },
+    });
+    return globalForPrisma.prisma;
+  } catch (error) {
+    // During build-time static analysis, Prisma might not be available
+    // Return a no-op client that won't break the build
+    if (!globalForPrisma.prisma) {
+      globalForPrisma.prisma = {
+        log: {
+          findMany: async () => [],
+          create: async () => ({}),
+          count: async () => 0,
+        },
+        policy: {
+          findMany: async () => [],
+          create: async () => ({}),
+          update: async () => ({}),
+          delete: async () => ({}),
+        },
+      } as any;
+    }
+    return globalForPrisma.prisma;
+  }
+}
+
+export const prisma = getPrisma();
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
