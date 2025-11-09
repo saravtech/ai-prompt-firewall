@@ -34,6 +34,10 @@ const config: runtime.GetPrismaClientConfig = {
         "fromEnvVar": null,
         "value": "windows",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "rhel-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
@@ -56,8 +60,8 @@ const config: runtime.GetPrismaClientConfig = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider = \"prisma-client\"\n  output   = \"../lib/prisma\"\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Log {\n  id           String   @id @default(cuid())\n  prompt       String\n  response     String?\n  timestamp    DateTime @default(now())\n  hasPII       Boolean  @default(false)\n  hasInjection Boolean  @default(false)\n  piiTypes     String? // JSON array of detected PII types\n  riskScore    Float    @default(0)\n  blocked      Boolean  @default(false)\n  metadata     String? // JSON for additional metadata\n}\n\nmodel Policy {\n  id          String   @id @default(cuid())\n  name        String\n  description String?\n  enabled     Boolean  @default(true)\n  rules       String // JSON array of detection rules\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n}\n",
-  "inlineSchemaHash": "7413799dbd91ebfc3d2d893e93894e4f705434b3660639a5847710a224e6147d",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider      = \"prisma-client\"\n  output        = \"../lib/prisma\"\n  binaryTargets = [\"native\", \"rhel-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Log {\n  id           String   @id @default(cuid())\n  prompt       String\n  response     String?\n  timestamp    DateTime @default(now())\n  hasPII       Boolean  @default(false)\n  hasInjection Boolean  @default(false)\n  piiTypes     String? // JSON array of detected PII types\n  riskScore    Float    @default(0)\n  blocked      Boolean  @default(false)\n  metadata     String? // JSON for additional metadata\n}\n\nmodel Policy {\n  id          String   @id @default(cuid())\n  name        String\n  description String?\n  enabled     Boolean  @default(true)\n  rules       String // JSON array of detection rules\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n}\n",
+  "inlineSchemaHash": "8fe11d7cd3d0136faf1fd1ef9fcde9927a448bffa3c1866724207a338ec45858",
   "copyEngine": true,
   "runtimeDataModel": {
     "models": {},

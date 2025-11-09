@@ -5,16 +5,22 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// Ensure DATABASE_URL is set with absolute path and file: protocol
+// Ensure DATABASE_URL is set correctly for both local and production
 function getDatabaseUrl(): string {
   let dbUrl = process.env.DATABASE_URL;
   
-  // Always use absolute path to avoid issues
+  // In production (Vercel), use the DATABASE_URL as-is (should be PostgreSQL)
+  if (process.env.VERCEL || (process.env.NODE_ENV === 'production' && dbUrl && !dbUrl.startsWith('file:'))) {
+    // Production: PostgreSQL connection string
+    return dbUrl || '';
+  }
+  
+  // Local development: use SQLite with absolute path
   const dbPath = path.resolve(process.cwd(), 'dev.db');
   const absoluteUrl = `file:${dbPath}`;
   
   // Set it in process.env so Prisma schema validation works
-  if (!process.env.DATABASE_URL || !process.env.DATABASE_URL.startsWith('file:')) {
+  if (!dbUrl || dbUrl.startsWith('file:')) {
     process.env.DATABASE_URL = absoluteUrl;
   }
   
