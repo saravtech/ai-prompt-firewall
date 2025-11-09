@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: policies.map((p) => ({
+      data: policies.map((p: any) => ({
         ...p,
         rules: JSON.parse(p.rules) as FirewallRule[],
       })),
