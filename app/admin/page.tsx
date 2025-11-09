@@ -113,13 +113,34 @@ export default function AdminPage() {
       if (filter.hasPII) params.append('hasPII', filter.hasPII);
       if (filter.hasInjection) params.append('hasInjection', filter.hasInjection);
 
-      const response = await fetch(`/api/logs?${params.toString()}`);
+      const response = await fetch(`/api/logs?${params.toString()}`, {
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        console.error('Failed to load logs:', response.status, response.statusText);
+        if (response.status === 401) {
+          console.error('⚠️ Not authenticated - redirecting to login');
+          window.location.href = '/admin/login';
+          return;
+        }
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        setLogs([]);
+        return;
+      }
+      
       const data = await response.json();
+      console.log('📊 Logs loaded:', data.data?.length || 0, 'logs');
       if (data.success) {
-        setLogs(data.data);
+        setLogs(data.data || []);
+      } else {
+        console.error('API returned error:', data.error);
+        setLogs([]);
       }
     } catch (error) {
-      console.error('Failed to load logs:', error);
+      console.error('❌ Failed to load logs:', error);
+      setLogs([]);
     } finally {
       setLoading(false);
     }

@@ -5,7 +5,8 @@
 After deployment, capture these screenshots:
 
 ### 1. Demo UI Homepage
-- **File**: `screenshots/demo-homepage.png`
+- **Location**: `screenshots/demo-homepage.png`
+- **Directory**: Create a `screenshots/` folder in the project root
 - **What to show**:
   - Prompt input field
   - "Run Firewall" button
@@ -69,21 +70,57 @@ After deployment, capture these screenshots:
    - Screenshot (Mac)
    - Full Page Screen Capture (Chrome extension)
 
+## Directory Structure
+
+Create a `screenshots/` folder in your project root:
+
+```
+prompt-firewall/
+├── screenshots/
+│   ├── README.md
+│   ├── demo-homepage.png
+│   ├── demo-pii-detection.png
+│   ├── demo-injection-block.png
+│   ├── admin-logs.png
+│   ├── admin-policies.png
+│   ├── admin-rules.png
+│   └── api-response.png
+└── ...
+```
+
 ## Adding Screenshots to README
 
-After capturing, add to README.md:
+After capturing, add to `README.md`:
 
 ```markdown
-## Screenshots
+## 📸 Screenshots
 
 ### Demo UI
 ![Demo Homepage](./screenshots/demo-homepage.png)
+*Public demo interface for testing prompts*
+
 ![PII Detection](./screenshots/demo-pii-detection.png)
+*Automatic PII detection and redaction*
+
 ![Injection Blocking](./screenshots/demo-injection-block.png)
+*Prompt injection detection and blocking*
 
 ### Admin Console
 ![Logs](./screenshots/admin-logs.png)
+*View and filter all query logs*
+
 ![Policies](./screenshots/admin-policies.png)
+*Manage detection policies*
+
 ![Regex Rules](./screenshots/admin-rules.png)
+*Add and edit custom regex rules*
 ```
+
+## Quick Steps
+
+1. **Create directory**: `mkdir screenshots` (or use the one already created)
+2. **Take screenshots** from your deployed app: https://prompt-firewall.vercel.app/
+3. **Save files** to `screenshots/` folder with the names above
+4. **Update README.md** with the screenshot references
+5. **Commit**: `git add screenshots/ README.md && git commit -m "Add screenshots"`
 

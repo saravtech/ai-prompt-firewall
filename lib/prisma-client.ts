@@ -25,30 +25,29 @@ const globalForPrisma = globalThis as unknown as {
 
 // Ensure DATABASE_URL is set correctly for both local and production
 function getDatabaseUrl(): string {
-  // For local development, ALWAYS use SQLite (schema is set to SQLite)
-  // For production (Vercel), use PostgreSQL from DATABASE_URL
-  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
-    // Production: use DATABASE_URL as-is (should be PostgreSQL)
-    let dbUrl = process.env.DATABASE_URL;
-    
-    // Clean up DATABASE_URL if it has incorrect prefix
-    if (dbUrl && dbUrl.includes('postgresql://')) {
-      const postgresqlIndex = dbUrl.indexOf('postgresql://');
-      if (postgresqlIndex > 0) {
-        dbUrl = dbUrl.substring(postgresqlIndex);
-      }
-    }
-    
-    return dbUrl || '';
+  // Schema is now PostgreSQL for both local and production
+  // Use DATABASE_URL from environment (should be PostgreSQL connection string)
+  let dbUrl = process.env.DATABASE_URL;
+  
+  if (!dbUrl) {
+    throw new Error('DATABASE_URL is not set. Please set it in .env file or environment variables.');
   }
   
-  // Local development: ALWAYS use SQLite (regardless of what's in .env)
-  const dbPath = path.resolve(process.cwd(), 'dev.db');
-  const absoluteUrl = `file:${dbPath}`;
+  // Clean up DATABASE_URL if it has incorrect prefix (e.g., "psql_'_postgresql://...")
+  if (dbUrl.includes('postgresql://')) {
+    const postgresqlIndex = dbUrl.indexOf('postgresql://');
+    if (postgresqlIndex > 0) {
+      dbUrl = dbUrl.substring(postgresqlIndex);
+      console.log('🔧 Cleaned DATABASE_URL (removed prefix)');
+    }
+  }
   
-  // Override DATABASE_URL for local SQLite
-  process.env.DATABASE_URL = absoluteUrl;
-  return absoluteUrl;
+  // Validate it's a PostgreSQL URL
+  if (!dbUrl.startsWith('postgresql://')) {
+    throw new Error(`Invalid DATABASE_URL format. Expected postgresql:// but got: ${dbUrl.substring(0, 20)}...`);
+  }
+  
+  return dbUrl;
 }
 
 // Create Prisma client instance - lazy initialization
@@ -63,7 +62,7 @@ function getPrisma() {
 
   // Try to load PrismaClient synchronously (for runtime)
   try {
-    const { PrismaClient: PC } = require('@prisma/client');
+    // First, get the database URL (this will override .env for local dev)
     const databaseUrl = getDatabaseUrl();
     
     // Validate database URL
@@ -71,7 +70,22 @@ function getPrisma() {
       throw new Error('DATABASE_URL is not set');
     }
     
-    globalForPrisma.prisma = new PC({
+    // Try to require PrismaClient
+    let PrismaClientClass;
+    try {
+      const prismaModule = require('@prisma/client');
+      PrismaClientClass = prismaModule.PrismaClient;
+      
+      if (!PrismaClientClass) {
+        throw new Error('PrismaClient not found in @prisma/client');
+      }
+    } catch (requireError: any) {
+      console.error('❌ Failed to require @prisma/client:', requireError.message);
+      throw new Error(`Cannot load Prisma Client: ${requireError.message}`);
+    }
+    
+    // Create Prisma client instance
+    globalForPrisma.prisma = new PrismaClientClass({
       datasources: {
         db: {
           url: databaseUrl,
@@ -80,6 +94,14 @@ function getPrisma() {
       // Add error formatting for better debugging
       log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
     });
+    
+    // Verify the client has the log model (ensures it's not a mock)
+    if (!globalForPrisma.prisma.log || typeof globalForPrisma.prisma.log.create !== 'function') {
+      throw new Error('Prisma client does not have log model - might be using mock');
+    }
+    
+    console.log('🔌 Prisma client initialized with database:', databaseUrl);
+    console.log('✅ Prisma client verified - log model available');
     
     // Note: PrismaClient doesn't connect until first query, so we don't test connection here
     return globalForPrisma.prisma;

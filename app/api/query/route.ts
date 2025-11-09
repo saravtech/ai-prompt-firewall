@@ -77,7 +77,9 @@ export async function POST(request: NextRequest) {
     let logId: string | null = null;
     try {
       // Check if prisma is available and has the log model
-      if (prisma && prisma.log) {
+      // Also check if it's not a mock client (mock clients have 'no-db' or 'mock' in their behavior)
+      if (prisma && prisma.log && typeof prisma.log.create === 'function') {
+        console.log('💾 Attempting to save log to database...');
         const log = await prisma.log.create({
           data: {
             prompt: evaluation.promptModified !== prompt ? evaluation.promptModified : prompt,
@@ -98,6 +100,9 @@ export async function POST(request: NextRequest) {
           },
         });
         logId = log.id;
+        console.log('✅ Log created successfully:', logId);
+      } else {
+        console.warn('⚠️ Prisma or log model not available');
       }
     } catch (error: any) {
       // If database tables don't exist yet, continue without logging
@@ -108,9 +113,14 @@ export async function POST(request: NextRequest) {
           error.message?.includes('Table') && error.message?.includes('does not exist') ||
           error.message?.includes('PrismaClient') ||
           error.message?.includes('not initialized')) {
-        console.warn('Database not available, skipping log:', error.message);
+        console.warn('⚠️ Database not available, skipping log:', error.message);
       } else {
-        console.warn('Could not log query to database:', error);
+        console.error('❌ Could not log query to database:', error);
+        console.error('Error details:', {
+          code: error.code,
+          message: error.message,
+          name: error.name
+        });
       }
     }
 
