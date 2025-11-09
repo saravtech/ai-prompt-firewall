@@ -54,9 +54,10 @@ prisma/dev.db
 Thumbs.db
 .DS_Store
 
-# Logs
-logs
+# Logs (but not API routes)
+logs/
 *.log
+!app/api/logs/
 
 # Prisma
 lib/prisma/
