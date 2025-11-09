@@ -39,15 +39,39 @@ export default function Home() {
         body: JSON.stringify({ prompt }),
       });
 
-      const data = await response.json();
+      // Check if response is ok
+      if (!response.ok) {
+        // Try to parse error response
+        let errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.details || errorMessage;
+        } catch {
+          // If response isn't JSON, use status text
+        }
+        alert('Error: ' + errorMessage);
+        return;
+      }
+
+      // Parse JSON response
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('Failed to parse response:', parseError);
+        alert('Error: Invalid response from server');
+        return;
+      }
+
       if (data.success) {
         setResult(data.data);
       } else {
-        alert('Error: ' + (data.error || 'Unknown error'));
+        alert('Error: ' + (data.error || data.details || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Failed to process prompt');
+      const errorMessage = error instanceof Error ? error.message : 'Network error or server unavailable';
+      alert('Failed to process prompt: ' + errorMessage);
     } finally {
       setLoading(false);
     }

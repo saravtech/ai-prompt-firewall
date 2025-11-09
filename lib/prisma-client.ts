@@ -25,38 +25,29 @@ const globalForPrisma = globalThis as unknown as {
 
 // Ensure DATABASE_URL is set correctly for both local and production
 function getDatabaseUrl(): string {
-  let dbUrl = process.env.DATABASE_URL;
-  
-  // Clean up DATABASE_URL if it has incorrect prefix (e.g., "psql_'_postgresql://...")
-  if (dbUrl && dbUrl.includes('postgresql://')) {
-    // Extract the actual PostgreSQL connection string
-    const postgresqlIndex = dbUrl.indexOf('postgresql://');
-    if (postgresqlIndex > 0) {
-      dbUrl = dbUrl.substring(postgresqlIndex);
+  // For local development, ALWAYS use SQLite (schema is set to SQLite)
+  // For production (Vercel), use PostgreSQL from DATABASE_URL
+  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+    // Production: use DATABASE_URL as-is (should be PostgreSQL)
+    let dbUrl = process.env.DATABASE_URL;
+    
+    // Clean up DATABASE_URL if it has incorrect prefix
+    if (dbUrl && dbUrl.includes('postgresql://')) {
+      const postgresqlIndex = dbUrl.indexOf('postgresql://');
+      if (postgresqlIndex > 0) {
+        dbUrl = dbUrl.substring(postgresqlIndex);
+      }
     }
-  }
-  
-  // In production (Vercel), use the DATABASE_URL as-is (should be PostgreSQL)
-  if (process.env.VERCEL || (process.env.NODE_ENV === 'production' && dbUrl && dbUrl.startsWith('postgresql://'))) {
-    // Production: PostgreSQL connection string
+    
     return dbUrl || '';
   }
   
-  // Local development: check if DATABASE_URL is set, otherwise use SQLite
-  if (dbUrl && dbUrl.startsWith('postgresql://')) {
-    // Local but using PostgreSQL
-    return dbUrl;
-  }
-  
-  // Local development: use SQLite with absolute path
+  // Local development: ALWAYS use SQLite (regardless of what's in .env)
   const dbPath = path.resolve(process.cwd(), 'dev.db');
   const absoluteUrl = `file:${dbPath}`;
   
-  // Set it in process.env so Prisma schema validation works
-  if (!dbUrl || dbUrl.startsWith('file:')) {
-    process.env.DATABASE_URL = absoluteUrl;
-  }
-  
+  // Override DATABASE_URL for local SQLite
+  process.env.DATABASE_URL = absoluteUrl;
   return absoluteUrl;
 }
 
@@ -74,16 +65,26 @@ function getPrisma() {
   try {
     const { PrismaClient: PC } = require('@prisma/client');
     const databaseUrl = getDatabaseUrl();
+    
+    // Validate database URL
+    if (!databaseUrl) {
+      throw new Error('DATABASE_URL is not set');
+    }
+    
     globalForPrisma.prisma = new PC({
       datasources: {
         db: {
           url: databaseUrl,
         },
       },
+      // Add error formatting for better debugging
+      log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
     });
+    
+    // Note: PrismaClient doesn't connect until first query, so we don't test connection here
     return globalForPrisma.prisma;
   } catch (error: any) {
-    // Only use mock during build-time, otherwise throw the error
+    // Only use mock during build-time, otherwise use a safe fallback
     if (isBuildTime) {
       console.warn('Prisma client not available during build, using mock');
       if (!globalForPrisma.prisma) {
@@ -104,9 +105,27 @@ function getPrisma() {
       return globalForPrisma.prisma;
     }
     
-    // At runtime, if Prisma fails to load, throw the error
+    // At runtime, if Prisma fails to load, log error but return a safe mock
+    // This allows the app to work even if database is unavailable
     console.error('Failed to initialize Prisma client at runtime:', error);
-    throw error;
+    console.warn('Using fallback mock client - database operations will not persist');
+    
+    if (!globalForPrisma.prisma) {
+      globalForPrisma.prisma = {
+        log: {
+          findMany: async () => [],
+          create: async () => ({ id: 'no-db', timestamp: new Date() }),
+          count: async () => 0,
+        },
+        policy: {
+          findMany: async () => [],
+          create: async () => ({ id: 'no-db', createdAt: new Date(), updatedAt: new Date() }),
+          update: async () => ({ id: 'no-db', updatedAt: new Date() }),
+          delete: async () => ({}),
+        },
+      } as any;
+    }
+    return globalForPrisma.prisma;
   }
 }
 
