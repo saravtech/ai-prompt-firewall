@@ -198,6 +198,11 @@ export default function AdminPage() {
   };
 
   const handleSavePolicy = async () => {
+    if (!newPolicy.name) {
+      alert('Policy name is required');
+      return;
+    }
+    
     try {
       if (editingPolicy) {
         const response = await fetch('/api/policy', {
@@ -728,7 +733,7 @@ export default function AdminPage() {
                     <Button
                       onClick={editingRule ? handleUpdateRule : handleAddRule}
                       className="flex-1"
-                      disabled={!newPolicy.name && !editingPolicy}
+                      disabled={!newRule.name || !newRule.pattern}
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       {editingRule ? 'Update' : 'Add'} Rule
