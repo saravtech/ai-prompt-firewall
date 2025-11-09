@@ -59,7 +59,8 @@ logs
 *.log
 
 # Prisma
-lib/prisma/query_engine-*
+lib/prisma/
+node_modules/.prisma/
 
 .vercel
 .env*.local
