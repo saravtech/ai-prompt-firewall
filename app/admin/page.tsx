@@ -243,7 +243,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleAddRule = () => {
+  const handleAddRule = async () => {
     if (!newRule.name || !newRule.pattern) {
       alert('Name and pattern are required');
       return;
@@ -272,9 +272,41 @@ export default function AdminPage() {
     }
 
     const updatedRules = [...(editingPolicy?.rules || newPolicy.rules), rule];
+    
+    // If editing an existing policy, save immediately to database
     if (editingPolicy) {
-      setNewPolicy({ ...newPolicy, rules: updatedRules });
+      try {
+        const response = await fetch('/api/policy', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            id: editingPolicy.id,
+            name: editingPolicy.name,
+            description: editingPolicy.description,
+            enabled: editingPolicy.enabled,
+            rules: updatedRules,
+          }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          // Update local state
+          setNewPolicy({ ...newPolicy, rules: updatedRules });
+          // Reload policies to get updated data
+          loadPolicies();
+          // Update editingPolicy with new rules
+          setEditingPolicy({ ...editingPolicy, rules: updatedRules });
+        } else {
+          alert(`Error: ${data.error || 'Failed to save rule'}`);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to save rule:', error);
+        alert(`Error: ${error instanceof Error ? error.message : 'Failed to save rule'}`);
+        return;
+      }
     } else {
+      // For new policy, just update local state
       setNewPolicy({ ...newPolicy, rules: updatedRules });
     }
 
@@ -301,7 +333,7 @@ export default function AdminPage() {
     });
   };
 
-  const handleUpdateRule = () => {
+  const handleUpdateRule = async () => {
     if (!editingRule || !newRule.name || !newRule.pattern) {
       alert('Name and pattern are required');
       return;
@@ -332,9 +364,40 @@ export default function AdminPage() {
     const currentRules = editingPolicy?.rules || newPolicy.rules;
     const updatedRules = currentRules.map((r) => (r.id === editingRule.id ? updatedRule : r));
     
+    // If editing an existing policy, save immediately to database
     if (editingPolicy) {
-      setNewPolicy({ ...newPolicy, rules: updatedRules });
+      try {
+        const response = await fetch('/api/policy', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            id: editingPolicy.id,
+            name: editingPolicy.name,
+            description: editingPolicy.description,
+            enabled: editingPolicy.enabled,
+            rules: updatedRules,
+          }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          // Update local state
+          setNewPolicy({ ...newPolicy, rules: updatedRules });
+          // Reload policies to get updated data
+          loadPolicies();
+          // Update editingPolicy with new rules
+          setEditingPolicy({ ...editingPolicy, rules: updatedRules });
+        } else {
+          alert(`Error: ${data.error || 'Failed to update rule'}`);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to update rule:', error);
+        alert(`Error: ${error instanceof Error ? error.message : 'Failed to update rule'}`);
+        return;
+      }
     } else {
+      // For new policy, just update local state
       setNewPolicy({ ...newPolicy, rules: updatedRules });
     }
 
@@ -349,15 +412,44 @@ export default function AdminPage() {
     });
   };
 
-  const handleDeleteRule = (ruleId: string) => {
+  const handleDeleteRule = async (ruleId: string) => {
     if (!confirm('Are you sure you want to delete this rule?')) return;
 
     const currentRules = editingPolicy?.rules || newPolicy.rules;
     const updatedRules = currentRules.filter((r) => r.id !== ruleId);
     
+    // If editing an existing policy, save immediately to database
     if (editingPolicy) {
-      setNewPolicy({ ...newPolicy, rules: updatedRules });
+      try {
+        const response = await fetch('/api/policy', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            id: editingPolicy.id,
+            name: editingPolicy.name,
+            description: editingPolicy.description,
+            enabled: editingPolicy.enabled,
+            rules: updatedRules,
+          }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          // Update local state
+          setNewPolicy({ ...newPolicy, rules: updatedRules });
+          // Reload policies to get updated data
+          loadPolicies();
+          // Update editingPolicy with new rules
+          setEditingPolicy({ ...editingPolicy, rules: updatedRules });
+        } else {
+          alert(`Error: ${data.error || 'Failed to delete rule'}`);
+        }
+      } catch (error) {
+        console.error('Failed to delete rule:', error);
+        alert(`Error: ${error instanceof Error ? error.message : 'Failed to delete rule'}`);
+      }
     } else {
+      // For new policy, just update local state
       setNewPolicy({ ...newPolicy, rules: updatedRules });
     }
   };
