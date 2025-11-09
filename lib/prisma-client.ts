@@ -27,10 +27,25 @@ const globalForPrisma = globalThis as unknown as {
 function getDatabaseUrl(): string {
   let dbUrl = process.env.DATABASE_URL;
   
+  // Clean up DATABASE_URL if it has incorrect prefix (e.g., "psql_'_postgresql://...")
+  if (dbUrl && dbUrl.includes('postgresql://')) {
+    // Extract the actual PostgreSQL connection string
+    const postgresqlIndex = dbUrl.indexOf('postgresql://');
+    if (postgresqlIndex > 0) {
+      dbUrl = dbUrl.substring(postgresqlIndex);
+    }
+  }
+  
   // In production (Vercel), use the DATABASE_URL as-is (should be PostgreSQL)
-  if (process.env.VERCEL || (process.env.NODE_ENV === 'production' && dbUrl && !dbUrl.startsWith('file:'))) {
+  if (process.env.VERCEL || (process.env.NODE_ENV === 'production' && dbUrl && dbUrl.startsWith('postgresql://'))) {
     // Production: PostgreSQL connection string
     return dbUrl || '';
+  }
+  
+  // Local development: check if DATABASE_URL is set, otherwise use SQLite
+  if (dbUrl && dbUrl.startsWith('postgresql://')) {
+    // Local but using PostgreSQL
+    return dbUrl;
   }
   
   // Local development: use SQLite with absolute path
