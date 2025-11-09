@@ -1,7 +1,8 @@
-/// <reference types="../node_modules/.prisma/client/default" />
-
+// Type declaration for Prisma Client
+// This ensures TypeScript can find PrismaClient during build
 declare module '@prisma/client' {
-  import { PrismaClient } from '../node_modules/.prisma/client/default';
-  export { PrismaClient };
+  // Re-export from the generated client location
+  // The path is relative to @prisma/client package
+  export * from '.prisma/client/default';
 }
 

@@ -61,6 +61,7 @@ logs
 # Prisma
 lib/prisma/
 node_modules/.prisma/
+node_modules/@prisma/client/.prisma/
 
 .vercel
 .env*.local
