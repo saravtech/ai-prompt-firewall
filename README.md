@@ -269,6 +269,6 @@ This is an MVP project. For production use, consider:
 
 ## 🔗 Links
 
-- **Live Demo**: [https://prompt-firewall.vercel.app/](https://prompt-firewall.vercel.app/)
-- **Admin Console**: [https://prompt-firewall.vercel.app/admin](https://prompt-firewall.vercel.app/admin)
+- **Live Demo**: [https://ai-prompt-firewall.vercel.app/](https://ai-prompt-firewall.vercel.app/)
+- **Admin Console**: [https://ai-prompt-firewall.vercel.app/admin](https://ai-prompt-firewall.vercel.app/admin)
 - **GitHub Repository**: [https://github.com/saravtech/ai-prompt-firewall](https://github.com/saravtech/ai-prompt-firewall)
