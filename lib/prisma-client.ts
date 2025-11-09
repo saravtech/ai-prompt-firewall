@@ -51,7 +51,11 @@ function getPrisma() {
     return globalForPrisma.prisma;
   }
 
-  // Try to load PrismaClient synchronously first (for runtime)
+  // Only use mock during build-time static analysis
+  // Check if we're in Next.js build phase
+  const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
+
+  // Try to load PrismaClient synchronously (for runtime)
   try {
     const { PrismaClient: PC } = require('@prisma/client');
     const databaseUrl = getDatabaseUrl();
@@ -63,25 +67,31 @@ function getPrisma() {
       },
     });
     return globalForPrisma.prisma;
-  } catch (error) {
-    // During build-time static analysis, Prisma might not be available
-    // Return a no-op client that won't break the build
-    if (!globalForPrisma.prisma) {
-      globalForPrisma.prisma = {
-        log: {
-          findMany: async () => [],
-          create: async () => ({}),
-          count: async () => 0,
-        },
-        policy: {
-          findMany: async () => [],
-          create: async () => ({}),
-          update: async () => ({}),
-          delete: async () => ({}),
-        },
-      } as any;
+  } catch (error: any) {
+    // Only use mock during build-time, otherwise throw the error
+    if (isBuildTime) {
+      console.warn('Prisma client not available during build, using mock');
+      if (!globalForPrisma.prisma) {
+        globalForPrisma.prisma = {
+          log: {
+            findMany: async () => [],
+            create: async () => ({ id: 'mock', timestamp: new Date() }),
+            count: async () => 0,
+          },
+          policy: {
+            findMany: async () => [],
+            create: async () => ({ id: 'mock', createdAt: new Date(), updatedAt: new Date() }),
+            update: async () => ({ id: 'mock', updatedAt: new Date() }),
+            delete: async () => ({}),
+          },
+        } as any;
+      }
+      return globalForPrisma.prisma;
     }
-    return globalForPrisma.prisma;
+    
+    // At runtime, if Prisma fails to load, throw the error
+    console.error('Failed to initialize Prisma client at runtime:', error);
+    throw error;
   }
 }
 
