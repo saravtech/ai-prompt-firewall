@@ -5,11 +5,21 @@ import { verifyAdminAuth } from './lib/auth';
 
 export async function middleware(request: NextRequest) {
   // Protect admin API routes
-  if (request.nextUrl.pathname.startsWith('/api/policy') || 
-      request.nextUrl.pathname.startsWith('/api/logs')) {
-    const isAuthenticated = await verifyAdminAuth(request);
-    
-    if (!isAuthenticated) {
+  const pathname = request.nextUrl.pathname;
+  
+  if (pathname.startsWith('/api/policy') || pathname.startsWith('/api/logs')) {
+    try {
+      const isAuthenticated = await verifyAdminAuth(request);
+      
+      if (!isAuthenticated) {
+        return NextResponse.json(
+          { success: false, error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+    } catch (error) {
+      // If auth check fails, return 401 (not 404)
+      console.error('Middleware auth error:', error);
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
