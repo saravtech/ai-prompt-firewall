@@ -9,8 +9,8 @@ info:
 servers:
   - url: http://localhost:3000
     description: Local development server
-  - url: https://your-deployment-url.com
-    description: Production server
+  - url: https://prompt-firewall.vercel.app
+    description: Production server (Vercel)
 
 paths:
   /api/v1/query:

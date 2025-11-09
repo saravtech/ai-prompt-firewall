@@ -14,10 +14,10 @@ A secure, production-ready firewall system for protecting AI applications from P
 
 ## 📍 Live Demo
 
-- **Demo UI**: [Deploy to get URL]
-- **Admin Console**: [Deploy to get URL] (Password: Set in environment variables)
+- **Demo UI**: [https://prompt-firewall.vercel.app/](https://prompt-firewall.vercel.app/)
+- **Admin Console**: [https://prompt-firewall.vercel.app/admin](https://prompt-firewall.vercel.app/admin) (Password: Set in environment variables)
 
-> **Note**: Currently running locally. See [DEPLOY.md](./DEPLOY.md) for deployment instructions.
+> **Note**: Live deployment on Vercel. See [DEPLOY.md](./DEPLOY.md) for deployment instructions.
 
 ## 🚀 Quick Start
 
@@ -72,7 +72,7 @@ Visit the homepage and enter a prompt to test:
 #### Evaluate a Prompt
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/query \
+curl -X POST https://prompt-firewall.vercel.app/api/v1/query \
   -H "Content-Type: application/json" \
   -d '{"prompt": "My email is user@example.com"}'
 ```
@@ -93,7 +93,7 @@ Response:
 #### Get Logs (requires auth)
 
 ```bash
-curl http://localhost:3000/api/v1/logs \
+curl https://prompt-firewall.vercel.app/api/v1/logs \
   -H "Authorization: Bearer your-api-key"
 ```
 
@@ -104,7 +104,7 @@ curl http://localhost:3000/api/v1/logs \
 ```python
 from prompt_firewall import PromptFirewall
 
-firewall = PromptFirewall(base_url="http://localhost:3000")
+firewall = PromptFirewall(base_url="https://prompt-firewall.vercel.app")
 result = firewall.query("My email is user@example.com")
 
 print(f"Decision: {result.decision}")
@@ -116,13 +116,15 @@ print(f"Risks: {result.risks}")
 ```javascript
 const PromptFirewall = require('./sdk/javascript/prompt-firewall');
 
-const firewall = new PromptFirewall('http://localhost:3000');
+const firewall = new PromptFirewall('https://prompt-firewall.vercel.app');
 const result = await firewall.query("What is the weather?");
 
 console.log('Decision:', result.decision);
 ```
 
 ## 🏗️ Architecture
+
+![Architecture Diagram](./ARCHITECTURE.png)
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed system architecture.
 
@@ -263,3 +265,10 @@ This is an MVP project. For production use, consider:
 - [Threat Model](./THREAT_MODEL.md)
 - [Python SDK](./sdk/python/README.md)
 - [JavaScript SDK](./sdk/javascript/README.md)
+- [OpenAPI Specification](./openapi.yaml)
+
+## 🔗 Links
+
+- **Live Demo**: [https://prompt-firewall.vercel.app/](https://prompt-firewall.vercel.app/)
+- **Admin Console**: [https://prompt-firewall.vercel.app/admin](https://prompt-firewall.vercel.app/admin)
+- **GitHub Repository**: [https://github.com/saravtech/ai-prompt-firewall](https://github.com/saravtech/ai-prompt-firewall)

@@ -1,0 +1,65 @@
+graph TB
+    subgraph "User Interface Layer"
+        A[Public Demo UI<br/>Next.js Page]
+        B[Admin Console<br/>Protected Page]
+    end
+    
+    subgraph "API Layer - Next.js Serverless Routes"
+        C["/api/v1/query<br/>(Public)"]
+        D["/api/v1/policy<br/>(Protected)"]
+        E["/api/v1/logs<br/>(Protected)"]
+        F["/api/auth/*<br/>(Authentication)"]
+    end
+    
+    subgraph "Firewall Engine"
+        G[PII Detection<br/>Emails, SSNs, Phones, Credit Cards]
+        H[Injection Detection<br/>15+ Patterns]
+        I[Rule Evaluation<br/>Custom Policies]
+        J[Risk Scoring<br/>& Decision Logic]
+    end
+    
+    subgraph "Data Layer"
+        K[(Prisma ORM)]
+        L[(SQLite/PostgreSQL<br/>Database)]
+        M[Logs Table]
+        N[Policies Table]
+    end
+    
+    A -->|HTTP/HTTPS| C
+    B -->|HTTP/HTTPS| D
+    B -->|HTTP/HTTPS| E
+    B -->|HTTP/HTTPS| F
+    
+    C --> G
+    C --> H
+    C --> I
+    C --> J
+    
+    D --> I
+    D --> K
+    E --> K
+    
+    G --> J
+    H --> J
+    I --> J
+    
+    J --> K
+    K --> L
+    L --> M
+    L --> N
+    
+    style A fill:#3b82f6,stroke:#1e40af,color:#fff
+    style B fill:#8b5cf6,stroke:#6d28d9,color:#fff
+    style C fill:#10b981,stroke:#059669,color:#fff
+    style D fill:#f59e0b,stroke:#d97706,color:#fff
+    style E fill:#f59e0b,stroke:#d97706,color:#fff
+    style F fill:#ef4444,stroke:#dc2626,color:#fff
+    style G fill:#06b6d4,stroke:#0891b2,color:#fff
+    style H fill:#06b6d4,stroke:#0891b2,color:#fff
+    style I fill:#06b6d4,stroke:#0891b2,color:#fff
+    style J fill:#06b6d4,stroke:#0891b2,color:#fff
+    style K fill:#6366f1,stroke:#4f46e5,color:#fff
+    style L fill:#14b8a6,stroke:#0d9488,color:#fff
+    style M fill:#64748b,stroke:#475569,color:#fff
+    style N fill:#64748b,stroke:#475569,color:#fff
+

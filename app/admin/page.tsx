@@ -540,14 +540,32 @@ export default function AdminPage() {
                     {editingPolicy
                       ? `Rules in "${editingPolicy.name}"`
                       : newPolicy.name
-                      ? `Rules in "${newPolicy.name}"`
+                      ? `Rules in "${newPolicy.name}" (unsaved)`
                       : 'Select or create a policy to manage rules'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {(!editingPolicy && !newPolicy.name) ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      Please create or select a policy first
+                    <div className="space-y-4">
+                      <div className="text-center py-4 text-muted-foreground">
+                        <p className="mb-2">No policy selected</p>
+                        <p className="text-xs">Go to the "Policies" tab to create or select a policy, then return here to add rules.</p>
+                      </div>
+                      {/* <div className="border-t pt-4">
+                        <p className="text-sm font-medium mb-2">Or create a new policy:</p>
+                        <Input
+                          value={newPolicy.name}
+                          onChange={(e) => setNewPolicy({ ...newPolicy, name: e.target.value })}
+                          placeholder="Enter policy name to start adding rules"
+                          className="mb-2"
+                        />
+                        <Textarea
+                          value={newPolicy.description}
+                          onChange={(e) => setNewPolicy({ ...newPolicy, description: e.target.value })}
+                          placeholder="Policy description (optional)"
+                          rows={2}
+                        />
+                      </div> */}
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -691,7 +709,7 @@ export default function AdminPage() {
                       className="flex-1"
                       disabled={!newPolicy.name && !editingPolicy}
                     >
-                      <Save className="h-4 w-4 mr-2" />
+                      <Plus className="h-4 w-4 mr-2" />
                       {editingRule ? 'Update' : 'Add'} Rule
                     </Button>
                     {editingRule && (
