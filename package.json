@@ -7,7 +7,7 @@
     "build": "prisma generate --schema=prisma/schema.prisma && next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate --schema=prisma/schema.prisma",
+    "postinstall": "rm -rf node_modules/.prisma 2>/dev/null; prisma generate --schema=prisma/schema.prisma",
     "db:generate": "npx prisma generate --schema=prisma/schema.prisma",
     "db:push": "npx prisma db push --schema=prisma/schema.prisma",
     "db:studio": "npx prisma studio --schema=prisma/schema.prisma"
