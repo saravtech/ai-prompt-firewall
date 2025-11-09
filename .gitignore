@@ -58,6 +58,7 @@ Thumbs.db
 logs/
 *.log
 !app/api/logs/
+!app/api/v1/logs/
 
 # Prisma
 lib/prisma/
