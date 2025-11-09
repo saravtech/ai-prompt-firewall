@@ -14,8 +14,8 @@ A secure, production-ready firewall system for protecting AI applications from P
 
 ## 📍 Live Demo
 
-- **Demo UI**: [https://prompt-firewall.vercel.app/](https://prompt-firewall.vercel.app/)
-- **Admin Console**: [https://prompt-firewall.vercel.app/admin](https://prompt-firewall.vercel.app/admin) (Password: Set in environment variables)
+- **Demo UI**: [https://ai-prompt-firewall.vercel.app/](https://ai-prompt-firewall.vercel.app/)
+- **Admin Console**: [https://ai-prompt-firewall.vercel.app/admin](https://ai-prompt-firewall.vercel.app/admin) (Password: Set in environment variables)
 
 > **Note**: Live deployment on Vercel. See [DEPLOY.md](./DEPLOY.md) for deployment instructions.
 
@@ -72,7 +72,7 @@ Visit the homepage and enter a prompt to test:
 #### Evaluate a Prompt
 
 ```bash
-curl -X POST https://prompt-firewall.vercel.app/api/v1/query \
+curl -X POST https://ai-prompt-firewall.vercel.app/api/v1/query \
   -H "Content-Type: application/json" \
   -d '{"prompt": "My email is user@example.com"}'
 ```
